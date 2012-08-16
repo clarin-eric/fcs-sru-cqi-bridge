@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<endpoint-config xmlns="http://www.clarin.eu/sru-server/1.0/">
+    <databaseInfo>
+        <title xml:lang="de">Tübingen Baumbank des Deutschen - Diachrones Corpus</title>
+        <title xml:lang="en" primary="true">Tübingen Treebank of Written German - Diachronic Corpus</title>
+        <description xml:lang="de">Suche im Tübingen Baumbank des Deutschen - Diachrones Corpus mit CQP via SRU.</description>
+        <description xml:lang="en" primary="true">Search Tübingen Treebank of Written German - Diachronic Corpus in CQP via SRU.</description>
+        <author xml:lang="en">Department of Linguistics, University of Tübingen</author>
+        <author xml:lang="de" primary="true">Seminars für Sprachwissenschaft, Universität Tübingen</author>
+        <!-- testing -->
+        <!-- 
+        <extent xml:lang="en" primary="true">Demo-Extend</extent>
+        <history xml:lang="en" primary="true">Demo-Histroy</history>
+        <langUsage xml:lang="en" primary="true">Demo-Lang-Usage</langUsage>
+        <restrictions xml:lang="en" primary="true">Demo-Restrictions</restrictions>
+        <subjects xml:lang="en" primary="true">Demo-Subjects</subjects>
+        <links xml:lang="en" primary="true">Demo-Links</links>
+        <implementation xml:lang="en" primary="true">Demo-Implementation</implementation>
+        -->
+    </databaseInfo>
+    
+    <indexInfo>
+        <set name="fcs" identifier="clarin.eu/fcs/1.0">
+            <title xml:lang="de">CLARIN Content Search</title>
+            <title xml:lang="en" primary="true">CLARIN Content Search</title>
+        </set>
+        <index search="true" scan="false" sort="false">
+            <title xml:lang="en" primary="true">Words</title>
+            <map primary="true">
+                <name set="fcs">words</name>
+            </map>
+        </index>
+        <!--
+        <set name="set2_name" identifier="set2_identifier">
+            <title xml:lang="de">Title DE</title>
+            <title xml:lang="en" primary="true">Title EN</title>
+        </set>
+         -->
+    </indexInfo>
+    
+    <schemaInfo>
+        <schema identifier="http://clarin.eu/fcs/1.0" name="fcs"
+                sort="false" retrieve="true">
+            <title xml:lang="en" primary="true">CLARIN Content Search</title>
+        </schema>
+    </schemaInfo>
+
+</endpoint-config>
