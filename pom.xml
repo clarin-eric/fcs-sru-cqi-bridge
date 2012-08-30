@@ -18,6 +18,11 @@
             <artifactId>sru-server</artifactId>
             <version>0.6.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>eu.clarin.cqi</groupId>
+            <artifactId>cqi-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

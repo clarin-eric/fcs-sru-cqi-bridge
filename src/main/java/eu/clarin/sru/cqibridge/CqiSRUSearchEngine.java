@@ -15,6 +15,9 @@
  */
 package eu.clarin.sru.cqibridge;
 
+import eu.clarin.cqi.client.CqiClient;
+import eu.clarin.cqi.client.CqiClientException;
+import eu.clarin.cqi.client.CqiResult;
 import eu.clarin.sru.server.*;
 import eu.clarin.sru.server.utils.SRUSearchEngineBase;
 import java.util.Map;
@@ -54,6 +57,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
     private static final String CLARIN_FCS_RECORD_SCHEMA = FCS_NS;
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final String WORD_POSITIONAL_ATTRIBUTE = "word";
+    private static final String CONTEXT_STRUCTURAL_ATTRIBUTE = "s";
     private static final Logger logger =
             LoggerFactory.getLogger(CqiSRUSearchEngine.class);
     private CqiClient client;
@@ -157,8 +161,8 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
         logger.info("running query = \"{}\", offset = {}, limit = {}",
                 new Object[]{cqpQuery, startRecord, maximumRecords});
         try {
-            final CqiResult result = client.cqpQuery(defaultCorpusName, cqpQuery);
-            if (!result.absolute(startRecord)) {
+            final CqiResult result = client.query(defaultCorpusName, cqpQuery, CONTEXT_STRUCTURAL_ATTRIBUTE);
+            if ((result.size() > 0 && !result.absolute(startRecord)) || (result.size() == 0 && startRecord > 0)) {
                 diagnostics.addDiagnostic(SRUConstants.SRU_FIRST_RECORD_POSITION_OUT_OF_RANGE, Integer.toString(startRecord + 1), null);
             }
 
@@ -203,32 +207,24 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
                 @Override
                 public void writeRecord(XMLStreamWriter writer)
                         throws XMLStreamException {
-                    final CqiResult.Range context;
-                    try {
-                        context = result.getRange(CqiResult.Field.CONTEXT);
-                    } catch (CqiClientException e) {
-                        throw new XMLStreamException("can't obtain the context range", e);
-                    }
-                    final CqiResult.Range match;
-                    try {
-                        match = result.getRange(CqiResult.Field.MATCH);
-                    } catch (CqiClientException e) {
-                        throw new XMLStreamException("can't obtain the match range", e);
-                    }
-                    int matchStart = match.getStart() - context.getStart();
-                    int matchEnd = match.getEnd() - context.getStart() + 1;
-                    int contextEnd = context.getEnd() - context.getStart() + 1;
+                    final int contextStart = result.getContextStart();
+                    final int contextEnd = result.getContextEnd();
+                    final int matchStart = result.getMatchStart();
+                    final int matchEnd = result.getMatchEnd();
+                    final int relMatchStart = matchStart - contextStart;
+                    final int relMatchEnd = matchEnd - contextStart + 1;
+                    final int relContextEnd = contextEnd - contextStart + 1;
                     final StringBuilder leftContext = new StringBuilder();
                     final StringBuilder keyWord = new StringBuilder();
                     final StringBuilder rightContext = new StringBuilder();
                     String[] words;
                     try {
-                        words = context.getValues(WORD_POSITIONAL_ATTRIBUTE);
+                        words = result.getValues(WORD_POSITIONAL_ATTRIBUTE, contextStart, contextEnd);
                     } catch (CqiClientException e) {
                         throw new XMLStreamException("can't obtain the values of the positional attribute '" + WORD_POSITIONAL_ATTRIBUTE + "'", e);
                     }
                     boolean isFirst = true;
-                    for (int i = 0; i < matchStart; i++) {
+                    for (int i = 0; i < relMatchStart; i++) {
                         if (isFirst) {
                             isFirst = false;
                         } else {
@@ -237,7 +233,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
                         leftContext.append(words[i]);
                     }
                     isFirst = true;
-                    for (int i = matchStart; i < matchEnd; i++) {
+                    for (int i = relMatchStart; i < relMatchEnd; i++) {
                         if (isFirst) {
                             isFirst = false;
                         } else {
@@ -246,7 +242,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
                         keyWord.append(words[i]);
                     }
                     isFirst = true;
-                    for (int i = matchEnd; i < contextEnd; i++) {
+                    for (int i = relMatchEnd; i < relContextEnd; i++) {
                         if (isFirst) {
                             isFirst = false;
                         } else {
