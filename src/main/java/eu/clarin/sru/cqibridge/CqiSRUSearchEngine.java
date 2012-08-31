@@ -45,6 +45,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
     private static final String PARAM_CQI_SERVER_PASSWORD = "cqi.serverPassword";
     private static final String PARAM_CQI_DEFAULT_CORPUS = "cqi.defaultCorpus";
     private static final String PARAM_CQI_DEFAULT_CORPUS_PID = "cqi.defaultCorpusPID";
+    private static final String PARAM_CQI_DEFAULT_CORPUS_REF = "cqi.defaultCorpusRef";
     private static final String CQI_SUPPORTED_RELATION_CQL_1_1 = "scr";
     private static final String CQI_SUPPORTED_RELATION_CQL_1_2 = "=";
     private static final String CQI_SUPPORTED_RELATION_EXACT = "exact";
@@ -63,7 +64,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
     private CqiClient client;
     private String defaultCorpusName;
     private String defaultCorpusPID;
-    //private String redirectBaseURI;
+    private String defaultCorpusRef;
 
     @Override
     public void init(SRUServerConfig config, Map<String, String> params)
@@ -100,6 +101,11 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
         if (defaultCorpusPID == null) {
             throw new SRUConfigException("parameter \""
                     + PARAM_CQI_DEFAULT_CORPUS_PID + "\" is mandatory");
+        }
+        defaultCorpusRef = params.get(PARAM_CQI_DEFAULT_CORPUS_REF);
+        if (defaultCorpusRef == null) {
+            throw new SRUConfigException("parameter \""
+                    + PARAM_CQI_DEFAULT_CORPUS_REF + "\" is mandatory");
         }
         try {
             client = new CqiClient(serverHost, serverPort);
@@ -254,6 +260,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
                     writer.writeStartElement(FCS_NS, "Resource");
                     writer.writeNamespace(FCS_PREFIX, FCS_NS);
                     writer.writeAttribute("pid", defaultCorpusPID);
+                    writer.writeAttribute("ref", defaultCorpusRef);
                     writer.writeStartElement(FCS_NS, "DataView");
                     writer.writeAttribute("type", "kwic");
 
