@@ -20,6 +20,7 @@ import eu.clarin.cqi.client.CqiClientException;
 import eu.clarin.cqi.client.CqiResult;
 import eu.clarin.sru.server.*;
 import eu.clarin.sru.server.utils.SRUSearchEngineBase;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
@@ -51,16 +52,28 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
     private static final String CQI_SUPPORTED_RELATION_EXACT = "exact";
     private static final String INDEX_CQL_SERVERCHOICE = "cql.serverChoice";
     private static final String INDEX_FCS_WORDS = "words";
+    private static final String INDEX_FCS_RESOURCE = "fcs.resource";
+    private static final String FCS_RESOURCE_TERM_WILDCARD = "*";
+    private static final String FCS_RESOURCE_TERM_ANY = "any";
     private static final String FCS_NS = "http://clarin.eu/fcs/1.0";
     private static final String FCS_PREFIX = "fcs";
     private static final String FCS_KWIC_NS = "http://clarin.eu/fcs/1.0/kwic";
     private static final String FCS_KWIC_PREFIX = "kwic";
     private static final String CLARIN_FCS_RECORD_SCHEMA = FCS_NS;
+    private static final String X_CLARIN_RESOURCE_INFO = "x-clarin-resource-info";
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final String WORD_POSITIONAL_ATTRIBUTE = "word";
     private static final String CONTEXT_STRUCTURAL_ATTRIBUTE = "s";
     private static final Logger logger =
             LoggerFactory.getLogger(CqiSRUSearchEngine.class);
+    private static final ResourceInfo[] RESOURCE_INFOS = new ResourceInfo[]{
+        new ResourceInfo("tueba-ddc", -1, false,
+        Arrays.asList("en", "TuebaDDC",
+        "de", "TübaDDC"),
+        Arrays.asList("en", "Tübingen Treebank of Written German - Diachronic Corpus.",
+        "de", "Tübingen Baumbank des Deutschen - Diachrones Corpus."),
+        Arrays.asList("deu"),
+        Arrays.asList("text", "fcs.words")),};
     private CqiClient client;
     private String defaultCorpusName;
     private String defaultCorpusPID;
@@ -129,7 +142,55 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
     @Override
     public SRUScanResultSet scan(SRUServerConfig config, SRURequest request,
             SRUDiagnosticList diagnostics) throws SRUException {
-        return null;
+        /*
+         * handle scan on CLARIN FCS fcs.resource;
+         * otherwise return an empty scan result set ...
+         */
+        final ResourceInfo[] result =
+                translateFcsScanResource(request.getScanClause());
+        final boolean provideResourceInfo = (result != null)
+                && parseBoolean(request.getExtraRequestData(X_CLARIN_RESOURCE_INFO));
+        return new SRUScanResultSet(diagnostics) {
+            private int idx = -1;
+
+            @Override
+            public boolean nextTerm() {
+                return (result != null) && (++idx < result.length);
+            }
+
+            @Override
+            public String getValue() {
+                return result[idx].getCorpusId();
+            }
+
+            @Override
+            public int getNumberOfRecords() {
+                return result[idx].getResourceCount();
+            }
+
+            @Override
+            public String getDisplayTerm() {
+                return null;
+            }
+
+            @Override
+            public SRUScanResultSet.WhereInList getWhereInList() {
+                return null;
+            }
+
+            @Override
+            public boolean hasExtraTermData() {
+                return provideResourceInfo;
+            }
+
+            @Override
+            public void writeExtraTermData(XMLStreamWriter writer)
+                    throws XMLStreamException {
+                if (provideResourceInfo) {
+                    result[idx].writeResourceInfo(writer, null);
+                }
+            }
+        };
     }
 
     @Override
@@ -173,7 +234,6 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
             }
 
             return new SRUSearchResultSet(diagnostics) {
-
                 private int pos = 0;
 
                 @Override
@@ -296,6 +356,68 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
         }
     }
 
+    private ResourceInfo[] translateFcsScanResource(CQLNode query)
+            throws SRUException {
+        if (query instanceof CQLTermNode) {
+            final CQLTermNode root = (CQLTermNode) query;
+            logger.debug("index = '{}', relation = '{}', term = '{}'",
+                    new Object[]{root.getIndex(),
+                        root.getRelation().getBase(), root.getTerm()});
+
+            String index = root.getIndex();
+            if (!(INDEX_FCS_RESOURCE.equals(index) || INDEX_CQL_SERVERCHOICE.equals(index))) {
+                throw new SRUException(SRUConstants.SRU_UNSUPPORTED_INDEX,
+                        root.getIndex(), "Index \"" + root.getIndex()
+                        + "\" is not supported in scan operation.");
+            }
+
+
+            // only allow "=" relation without any modifiers
+            final CQLRelation relationNode = root.getRelation();
+            String relation = relationNode.getBase();
+            if (!(CQI_SUPPORTED_RELATION_CQL_1_1.equals(relation)
+                    || CQI_SUPPORTED_RELATION_CQL_1_2.equals(relation)
+                    || CQI_SUPPORTED_RELATION_EXACT.equals(relation))) {
+                throw new SRUException(SRUConstants.SRU_UNSUPPORTED_RELATION,
+                        relationNode.getBase(), "Relation \""
+                        + relationNode.getBase()
+                        + "\" is not supported in scan operation.");
+            }
+            Vector<Modifier> modifiers = relationNode.getModifiers();
+            if ((modifiers != null) && !modifiers.isEmpty()) {
+                Modifier modifier = modifiers.get(0);
+                throw new SRUException(
+                        SRUConstants.SRU_UNSUPPORTED_RELATION_MODIFIER,
+                        modifier.getValue(), "Relation modifier \""
+                        + modifier.getValue()
+                        + "\" is not supported in scan operation.");
+            }
+
+            String term = root.getTerm();
+            if ((term == null) || term.isEmpty()) {
+                throw new SRUException(SRUConstants.SRU_EMPTY_TERM_UNSUPPORTED,
+                        "An empty term is not supported in scan operation.");
+            }
+
+            /*
+             * generate result: currently we only have a flat hierarchy, so
+             * return an empty result on any attempt to do a recursive scan ...
+             */
+            if ((INDEX_CQL_SERVERCHOICE.equals(index)
+                    && INDEX_FCS_RESOURCE.equals(term))
+                    || (INDEX_FCS_RESOURCE.equals(index)
+                    && (FCS_RESOURCE_TERM_WILDCARD.equals(term)
+                    || FCS_RESOURCE_TERM_ANY.equalsIgnoreCase(term)))) {
+                return RESOURCE_INFOS;
+            } else {
+                return null;
+            }
+        } else {
+            throw new SRUException(SRUConstants.SRU_QUERY_FEATURE_UNSUPPORTED,
+                    "Scan clause too complex.");
+        }
+    }
+
     private String translateCQLtoCQP(CQLNode query) throws SRUException {
         if (query instanceof CQLTermNode) {
             final CQLTermNode root = (CQLTermNode) query;
@@ -340,5 +462,12 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
         throw new SRUException(SRUConstants.SRU_QUERY_FEATURE_UNSUPPORTED,
                 "Server currently supportes term-only query "
                 + "(CQL conformance level 0).");
+    }
+
+    private boolean parseBoolean(String value) {
+        if (value != null) {
+            return value.endsWith("1") || Boolean.parseBoolean(value);
+        }
+        return false;
     }
 }
