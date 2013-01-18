@@ -60,7 +60,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
     private static final String FCS_KWIC_NS = "http://clarin.eu/fcs/1.0/kwic";
     private static final String FCS_KWIC_PREFIX = "kwic";
     private static final String CLARIN_FCS_RECORD_SCHEMA = FCS_NS;
-    private static final String X_CLARIN_RESOURCE_INFO = "x-clarin-resource-info";
+    private static final String X_CMD_RESOURCE_INFO = "x-cmd-resource-info";
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final String WORD_POSITIONAL_ATTRIBUTE = "word";
     private static final String CONTEXT_STRUCTURAL_ATTRIBUTE = "s";
@@ -149,7 +149,7 @@ public class CqiSRUSearchEngine extends SRUSearchEngineBase {
         final ResourceInfo[] result =
                 translateFcsScanResource(request.getScanClause());
         final boolean provideResourceInfo = (result != null)
-                && parseBoolean(request.getExtraRequestData(X_CLARIN_RESOURCE_INFO));
+                && parseBoolean(request.getExtraRequestData(X_CMD_RESOURCE_INFO));
         return new SRUScanResultSet(diagnostics) {
             private int idx = -1;
 
