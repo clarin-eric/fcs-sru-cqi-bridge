@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sru-cqibridge</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <packaging>war</packaging>
 
     <name>SRU-CQIBridge</name>
@@ -24,12 +24,17 @@
         <dependency>
             <groupId>eu.clarin.sru</groupId>
             <artifactId>sru-server</artifactId>
-            <version>1.1.0</version>
+            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>eu.clarin.cqi</groupId>
             <artifactId>cqi-client</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.6.4</version>
         </dependency>
     </dependencies>
 

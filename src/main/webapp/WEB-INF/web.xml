@@ -12,19 +12,19 @@
         <servlet-class>eu.clarin.sru.server.utils.SRUServerServlet</servlet-class>
         <init-param>
             <param-name>cqi.serverHost</param-name>
-            <param-value></param-value>
+            <param-value>server.sfs.uni-tuebingen.de</param-value>
         </init-param>
         <init-param>
             <param-name>cqi.serverPort</param-name>
-            <param-value></param-value>
+            <param-value>4877</param-value>
         </init-param>
         <init-param>
             <param-name>cqi.serverUsername</param-name>
-            <param-value></param-value>
+            <param-value>username</param-value>
         </init-param>
         <init-param>
             <param-name>cqi.serverPassword</param-name>
-            <param-value></param-value>
+            <param-value>password</param-value>
         </init-param>
         <init-param>
             <param-name>cqi.defaultCorpus</param-name>
@@ -35,15 +35,35 @@
             <param-value>11858/00-1778-0000-0001-DDAF-D</param-value>
         </init-param>
         <init-param>
-            <param-name>sru.allowOverrideMaximumRecords</param-name>
+            <param-name>cqi.defaultCorpusRef</param-name>
+            <param-value>http://www.sfs.uni-tuebingen.de/corpora.shtml</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.allowOverrideMaximumRecords</param-name>
             <param-value>false</param-value>
         </init-param>
         <init-param>
-            <param-name>sru.allowOverrideIndentResponse</param-name>
+            <param-name>eu.clarin.sru.server.allowOverrideIndentResponse</param-name>
             <param-value>true</param-value>
         </init-param>
         <init-param>
-            <param-name>sruServerSerachEngineClass</param-name>
+            <param-name>eu.clarin.sru.server.transport</param-name>
+            <param-value>http</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.host</param-name>
+            <param-value>weblicht.sfs.uni-tuebingen.de</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.port</param-name>
+            <param-value>80</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.database</param-name>
+            <param-value>rws/sru/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.utils.sruServerSearchEngineClass</param-name>
             <param-value>eu.clarin.sru.cqibridge.CqiSRUSearchEngine</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
