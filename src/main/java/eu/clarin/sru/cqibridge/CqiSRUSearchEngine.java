@@ -177,8 +177,6 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
         final String cqpQuery = translateCQLtoCQP(query);
         if (startRecord > 0) {
             startRecord--;
-        } else if (startRecord == -1) {
-            startRecord = 0;
         }
         logger.info("running query = \"{}\", offset = {}, limit = {}",
                 new Object[]{cqpQuery, startRecord, maximumRecords});
@@ -189,7 +187,7 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
             }
 
             return new SRUSearchResultSet(diagnostics) {
-                private int pos = 0;
+                private int pos = -1;
 
                 @Override
                 public int getTotalRecordCount() {
