@@ -29,7 +29,7 @@
         <dependency>
             <groupId>eu.clarin.cqi</groupId>
             <artifactId>cqi-client</artifactId>
-            <version>1.0</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
