@@ -36,7 +36,7 @@
         </init-param>
         <init-param>
             <param-name>cqi.defaultCorpusRef</param-name>
-            <param-value>http://www.sfs.uni-tuebingen.de/corpora.shtml</param-value>
+            <param-value>http://www.sfs.uni-tuebingen.de/ascl/ressourcen/corpora.html</param-value>
         </init-param>
         <init-param>
             <param-name>eu.clarin.sru.server.allowOverrideMaximumRecords</param-name>
