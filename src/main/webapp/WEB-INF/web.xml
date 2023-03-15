@@ -10,6 +10,7 @@
         <display-name>CQI SRU/CQL Service (HTTP Interface)</display-name>
         <servlet-name>CQISRUServlet</servlet-name>
         <servlet-class>eu.clarin.sru.server.utils.SRUServerServlet</servlet-class>
+        <!-- CQI connection configuration -->
         <init-param>
             <param-name>cqi.serverHost</param-name>
             <param-value>server.sfs.uni-tuebingen.de</param-value>
@@ -26,6 +27,7 @@
             <param-name>cqi.serverPassword</param-name>
             <param-value>password</param-value>
         </init-param>
+        <!-- CQI corpus information -->
         <init-param>
             <param-name>cqi.defaultCorpus</param-name>
             <param-value>TUEBA-DDC</param-value>
@@ -37,6 +39,15 @@
         <init-param>
             <param-name>cqi.defaultCorpusRef</param-name>
             <param-value>http://www.sfs.uni-tuebingen.de/ascl/ressourcen/corpora.html</param-value>
+        </init-param>
+        <!-- SRU settings -->
+        <init-param>
+            <param-name>eu.clarin.sru.server.numberOfRecords</param-name>
+            <param-value>250</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.maximumRecords</param-name>
+            <param-value>1000</param-value>
         </init-param>
         <init-param>
             <param-name>eu.clarin.sru.server.allowOverrideMaximumRecords</param-name>
@@ -61,6 +72,15 @@
         <init-param>
             <param-name>eu.clarin.sru.server.database</param-name>
             <param-value>rws/sru/</param-value>
+        </init-param>
+        <!-- To enable SRU 2.0 for FCS 2.0 -->
+        <init-param>
+            <param-name>eu.clarin.sru.server.sruSupportedVersionMax</param-name>
+            <param-value>2.0</param-value>
+        </init-param>
+        <init-param>
+            <param-name>eu.clarin.sru.server.legacyNamespaceMode</param-name>
+            <param-value>loc</param-value>
         </init-param>
         <init-param>
             <param-name>eu.clarin.sru.server.utils.sruServerSearchEngineClass</param-name>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EndpointDescription xmlns="http://clarin.eu/fcs/endpoint-description"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://clarin.eu/fcs/endpoint-description ../../xsd/Endpoint-Description.xsd"
+    version="2">
+    <Capabilities>
+        <Capability>http://clarin.eu/fcs/capability/basic-search</Capability>
+    </Capabilities>
+    <SupportedDataViews>
+        <SupportedDataView id="hits" delivery-policy="send-by-default">application/x-clarin-fcs-hits+xml</SupportedDataView>
+    </SupportedDataViews>
+    <Resources>
+        <Resource pid="http://hdl.handle.net/11858/00-1778-0000-0001-DDAF-D">
+            <Title xml:lang="de">TübaDDC</Title>
+            <Title xml:lang="en">TuebaDDC</Title>
+            <Description xml:lang="de">
+                Tübingen Baumbank des Deutschen - Diachrones Corpus.
+            </Description>
+            <Description xml:lang="en">
+                Tübingen Treebank of Written German - Diachronic Corpus
+            </Description>
+            <LandingPageURI>http://www.sfs.uni-tuebingen.de/ascl/ressourcen/corpora.html</LandingPageURI>
+            <Languages>
+                <Language>deu</Language>
+            </Languages>
+            <AvailableDataViews ref="hits"/>
+            <!-- here you could put a nested <Resources> -->
+        </Resource>
+        <!-- here, you could have more (top-level) <Resource> elements -->
+    </Resources>
+</EndpointDescription>

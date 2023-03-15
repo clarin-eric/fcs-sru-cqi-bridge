@@ -5,7 +5,7 @@
 
     <groupId>eu.clarin.sru.cqibridge</groupId>
     <artifactId>sru-cqibridge</artifactId>
-    <version>1.2</version>
+    <version>2.0</version>
     <packaging>war</packaging>
 
     <name>SRU-CQIBridge</name>
@@ -14,12 +14,19 @@
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <slf4j.version>1.7.32</slf4j.version>
     </properties>
 
     <repositories>
         <repository>
-            <id>clarin</id>
-            <url>http://catalog.clarin.eu/ds/nexus/content/repositories/Clarin/</url>
+            <id>CLARIN</id>
+            <name>CLARIN Repository</name>
+            <url>https://nexus.clarin.eu/content/repositories/Clarin</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
 
@@ -27,27 +34,32 @@
         <dependency>
             <groupId>eu.clarin.sru</groupId>
             <artifactId>sru-server</artifactId>
-            <version>1.5.0</version>
+            <version>1.8.0</version>
         </dependency>
+        <dependency>
+            <groupId>eu.clarin.sru.fcs</groupId>
+            <artifactId>fcs-simple-endpoint</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
         <dependency>
             <groupId>eu.clarin.cqi</groupId>
             <artifactId>cqi-client</artifactId>
             <version>1.2</version>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.6.4</version>
-        </dependency>
-        <dependency>
-            <groupId>eu.clarin.sru.fcs</groupId>
-            <artifactId>fcs-simple-endpoint</artifactId>
-            <version>1.1.0</version>
-        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
+            <type>jar</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
     </dependencies>
 
@@ -56,10 +68,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
                     </compilerArguments>
@@ -68,7 +81,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
+                <version>3.3.2</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>

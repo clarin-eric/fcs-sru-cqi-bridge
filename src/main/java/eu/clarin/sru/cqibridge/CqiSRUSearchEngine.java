@@ -19,11 +19,16 @@ import eu.clarin.cqi.client.CqiClient;
 import eu.clarin.cqi.client.CqiClientException;
 import eu.clarin.cqi.client.CqiResult;
 import eu.clarin.sru.server.*;
-import eu.clarin.sru.server.fcs.ResourceInfoInventory;
+import eu.clarin.sru.server.SRUQueryParserRegistry.Builder;
+import eu.clarin.sru.server.fcs.Constants;
+import eu.clarin.sru.server.fcs.EndpointDescription;
 import eu.clarin.sru.server.fcs.SimpleEndpointSearchEngineBase;
 import eu.clarin.sru.server.fcs.XMLStreamWriterHelper;
-import eu.clarin.sru.server.fcs.utils.SimpleResourceInfoInventoryParser;
+import eu.clarin.sru.server.fcs.utils.SimpleEndpointDescriptionParser;
+
+import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -51,17 +56,21 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     private static final String PARAM_CQI_DEFAULT_CORPUS = "cqi.defaultCorpus";
     private static final String PARAM_CQI_DEFAULT_CORPUS_PID = "cqi.defaultCorpusPID";
     private static final String PARAM_CQI_DEFAULT_CORPUS_REF = "cqi.defaultCorpusRef";
-    private static final String RESOURCE_INFO_INVENTORY_URL = "/WEB-INF/resource-info.xml";
+    public static final String PARAM_RESOURCE_INVENTORY_URL = "eu.clarin.sru.cqibridge.resourceInventoryURL";
+    private static final String RESOURCE_INVENTORY_URL = "/WEB-INF/endpoint-description.xml";
+
+    public static final String CLARIN_FCS_RECORD_SCHEMA = "http://clarin.eu/fcs/resource";
 
     private static final String CQI_SUPPORTED_RELATION_CQL_1_1 = "scr";
     private static final String CQI_SUPPORTED_RELATION_CQL_1_2 = "=";
     private static final String CQI_SUPPORTED_RELATION_EXACT = "exact";
     private static final String INDEX_CQL_SERVERCHOICE = "cql.serverChoice";
     private static final String INDEX_FCS_WORDS = "words";
-    private static final String CLARIN_FCS_RECORD_SCHEMA = "http://clarin.eu/fcs/1.0";
+
+    public static final String WORD_POSITIONAL_ATTRIBUTE = "word";
+    public static final String CONTEXT_STRUCTURAL_ATTRIBUTE = "s";
+
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
-    private static final String WORD_POSITIONAL_ATTRIBUTE = "word";
-    private static final String CONTEXT_STRUCTURAL_ATTRIBUTE = "s";
 
     private static final Logger logger = LoggerFactory.getLogger(CqiSRUSearchEngine.class);
 
@@ -71,8 +80,29 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     private String defaultCorpusRef;
 
     @Override
-    protected void doInit(ServletContext context, SRUServerConfig config, Map<String, String> params)
-            throws SRUConfigException {
+    protected EndpointDescription createEndpointDescription(ServletContext context, SRUServerConfig config,
+            Map<String, String> params) throws SRUConfigException {
+        try {
+            URL url = null;
+            String riu = params.get(PARAM_RESOURCE_INVENTORY_URL);
+            if ((riu == null) || riu.isEmpty()) {
+                url = context.getResource(RESOURCE_INVENTORY_URL);
+                logger.debug("using bundled 'endpoint-description.xml' file");
+            } else {
+                url = new File(riu).toURI().toURL();
+                logger.debug("using external file '{}'", riu);
+            }
+
+            return SimpleEndpointDescriptionParser.parse(url);
+        } catch (MalformedURLException mue) {
+            throw new SRUConfigException("Malformed URL for initializing resource info inventory", mue);
+        }
+    }
+
+    @Override
+    protected void doInit(ServletContext context, SRUServerConfig config,
+            SRUQueryParserRegistry.Builder queryParserBuilder, Map<String, String> params) throws SRUConfigException {
+        logger.info("CqiSRUSearchEngine::doInit {}", config.getPort());
         /*
          * Perform search engine specific initialization in this method, e.g.
          * set up a database connection, etc.
@@ -108,6 +138,7 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
         if (defaultCorpusRef == null) {
             throw new SRUConfigException("parameter \"" + PARAM_CQI_DEFAULT_CORPUS_REF + "\" is mandatory");
         }
+
         try {
             client = new CqiClient(serverHost, serverPort);
         } catch (CqiClientException ex) {
@@ -121,20 +152,9 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     }
 
     @Override
-    protected ResourceInfoInventory createResourceInfoInventory(ServletContext context, SRUServerConfig config,
-            Map<String, String> params) throws SRUConfigException {
-        /*
-         * Create a new instance of a class that implements the
-         * ResourceInfoInventory interface and return it. The resource info
-         * inventory is used for endpoint resource enumeration (see CLARIN FCS
-         * specification)
-         */
-        try {
-            return SimpleResourceInfoInventoryParser.parse(context.getResource(RESOURCE_INFO_INVENTORY_URL));
-        } catch (MalformedURLException e) {
-            throw new SRUConfigException("error initializing resource info inventory", e);
-        }
-
+    protected SRUScanResultSet doScan(SRUServerConfig config, SRURequest request, SRUDiagnosticList diagnostics)
+            throws SRUException {
+        return null;
     }
 
     @Override
@@ -145,7 +165,11 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
          * format if a recordSchema is specified.
          */
         final String recordSchemaIdentifier = request.getRecordSchemaIdentifier();
+        // this might not be required as the SRU library already checks and handles this
+        // based on the sru-server-config.xml file
         if ((recordSchemaIdentifier != null) && !recordSchemaIdentifier.equals(CLARIN_FCS_RECORD_SCHEMA)) {
+            logger.debug("record schema = got:{} / supports:{} / same:{}", new Object[] { recordSchemaIdentifier,
+                    CLARIN_FCS_RECORD_SCHEMA, recordSchemaIdentifier.equals(CLARIN_FCS_RECORD_SCHEMA) });
             throw new SRUException(SRUConstants.SRU_UNKNOWN_SCHEMA_FOR_RETRIEVAL, recordSchemaIdentifier,
                     "Record schema \"" + recordSchemaIdentifier + "\" is not supported by this endpoint.");
         }
@@ -153,14 +177,31 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
         /*
          * commence search ...
          */
-        final CQLNode query = request.getQuery();
-        int startRecord = request.getStartRecord();
-        final int maximumRecords = request.getMaximumRecords();
 
-        final String cqpQuery = translateCQLtoCQP(query);
+        if (!request.isQueryType(Constants.FCS_QUERY_TYPE_CQL)) {
+            /*
+             * Got something else we don't support. Send error ...
+             */
+            throw new SRUException(
+                    SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN,
+                    "Queries with queryType '" +
+                            request.getQueryType() +
+                            "' are not supported by this CLARIN-FCS Endpoint.");
+        }
+        /*
+         * Got a CQL query (either SRU 1.1 or higher).
+         * Translate to a proper CQP query ...
+         */
+        final CQLQueryParser.CQLQuery query = request.getQuery(CQLQueryParser.CQLQuery.class);
+        final CQLNode queryNode = query.getParsedQuery();
+        final String cqpQuery = translateCQLtoCQP(queryNode);
+
+        int startRecord = (request.getStartRecord() < 1) ? 1 : request.getStartRecord();
+        final int maximumRecords = startRecord - 1 + request.getMaximumRecords();
         if (startRecord > 0) {
             startRecord--;
         }
+
         logger.info("running query = \"{}\", offset = {}, limit = {}, in = {}",
                 new Object[] { cqpQuery, startRecord, maximumRecords, defaultCorpusName });
         try {
@@ -170,84 +211,12 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
                         Integer.toString(startRecord + 1), null);
             }
 
-            return new SRUSearchResultSet(diagnostics) {
-                private int pos = -1;
-
-                @Override
-                public int getTotalRecordCount() {
-                    return result.size();
-                }
-
-                @Override
-                public int getRecordCount() {
-                    return result.size();
-                }
-
-                @Override
-                public String getRecordSchemaIdentifier() {
-                    return CLARIN_FCS_RECORD_SCHEMA;
-                }
-
-                @Override
-                public String getRecordIdentifier() {
-                    return null;
-                }
-
-                @Override
-                public boolean nextRecord() {
-                    try {
-                        return ++pos < maximumRecords && result.next();
-                    } catch (CqiClientException e) {
-                        throw new NoSuchElementException(e.getMessage());
-                    }
-                }
-
-                @Override
-                public SRUDiagnostic getSurrogateDiagnostic() {
-                    return null;
-                }
-
-                @Override
-                public void writeRecord(XMLStreamWriter writer)
-                        throws XMLStreamException {
-                    final int contextStart = result.getContextStart();
-                    final int contextEnd = result.getContextEnd();
-                    final int relMatchStart = result.getMatchStart() - contextStart;
-                    final int relMatchEnd = result.getMatchEnd() - contextStart + 1;
-                    final int relContextEnd = contextEnd - contextStart + 1;
-                    String[] words;
-                    try {
-                        words = result.getValues(WORD_POSITIONAL_ATTRIBUTE, contextStart, contextEnd);
-                    } catch (CqiClientException e) {
-                        throw new XMLStreamException("can't obtain the values of the positional attribute '"
-                                + WORD_POSITIONAL_ATTRIBUTE + "'", e);
-                    }
-                    String leftContext = matchToString(words, 0, relMatchStart);
-                    String keyWord = matchToString(words, relMatchStart, relMatchEnd);
-                    String rightContext = matchToString(words, relMatchEnd, relContextEnd);
-                    XMLStreamWriterHelper.writeResourceWithKWICDataView(writer, defaultCorpusPID, defaultCorpusRef,
-                            leftContext, keyWord, rightContext);
-                }
-            };
+            return new CqiSRUSearchResultSet(request, diagnostics, result, defaultCorpusPID, defaultCorpusRef);
         } catch (CqiClientException e) {
             logger.error("error processing query", e);
             throw new SRUException(SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN,
                     "Error processing query (" + e.getMessage() + ").", e);
         }
-    }
-
-    private static String matchToString(String[] words, int fromIndex, int toIndex) {
-        final StringBuilder sb = new StringBuilder();
-        boolean isFirst = true;
-        for (int i = fromIndex; i < toIndex; i++) {
-            if (isFirst) {
-                isFirst = false;
-            } else {
-                sb.append(' ');
-            }
-            sb.append(words[i]);
-        }
-        return sb.toString();
     }
 
     private String translateCQLtoCQP(CQLNode query) throws SRUException {
