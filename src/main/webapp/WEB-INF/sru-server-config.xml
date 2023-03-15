@@ -18,7 +18,7 @@
         <implementation xml:lang="en" primary="true">Demo-Implementation</implementation>
         -->
     </databaseInfo>
-    
+
     <indexInfo>
         <set name="fcs" identifier="clarin.eu/fcs/1.0">
             <title xml:lang="de">CLARIN Content Search</title>
@@ -37,10 +37,9 @@
         </set>
          -->
     </indexInfo>
-    
+
     <schemaInfo>
-        <schema identifier="http://clarin.eu/fcs/1.0" name="fcs"
-                sort="false" retrieve="true">
+        <schema identifier="http://clarin.eu/fcs/1.0" name="fcs" sort="false" retrieve="true">
             <title xml:lang="en" primary="true">CLARIN Content Search</title>
         </schema>
     </schemaInfo>

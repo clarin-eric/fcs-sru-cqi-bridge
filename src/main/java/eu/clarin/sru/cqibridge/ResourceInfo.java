@@ -14,6 +14,7 @@ import javax.xml.stream.XMLStreamWriter;
 public class ResourceInfo {
 
     private static final String FCS_RESOURCE_INFO_NS = "http://clarin.eu/fcs/1.0/resource-info";
+
     private final String corpusId;
     private final int resourceCount;
     private final boolean hasSubResources;
@@ -22,10 +23,8 @@ public class ResourceInfo {
     private final List<String> languages;
     private final Map<String, String> indexes;
 
-    public ResourceInfo(String corpusId, int resourceCount,
-            boolean hasSubResources, List<String> title,
-            List<String> description, List<String> languages,
-            List<String> indexes) {
+    public ResourceInfo(String corpusId, int resourceCount, boolean hasSubResources, List<String> title,
+            List<String> description, List<String> languages, List<String> indexes) {
         this.corpusId = corpusId;
         this.resourceCount = (resourceCount > 0) ? resourceCount : -1;
         this.hasSubResources = hasSubResources;
@@ -43,8 +42,7 @@ public class ResourceInfo {
         return resourceCount;
     }
 
-    public void writeResourceInfo(XMLStreamWriter writer, String prefix)
-            throws XMLStreamException {
+    public void writeResourceInfo(XMLStreamWriter writer, String prefix) throws XMLStreamException {
         final boolean defaultNS = (prefix == null || prefix.isEmpty());
         if (defaultNS) {
             writer.setDefaultNamespace(FCS_RESOURCE_INFO_NS);
@@ -62,18 +60,15 @@ public class ResourceInfo {
         }
         for (Map.Entry<String, String> i : title.entrySet()) {
             writer.writeStartElement(FCS_RESOURCE_INFO_NS, "title");
-            writer.writeAttribute(XMLConstants.XML_NS_URI,
-                    "lang", i.getKey());
+            writer.writeAttribute(XMLConstants.XML_NS_URI, "lang", i.getKey());
             writer.writeCharacters(i.getValue());
             writer.writeEndElement(); // "title" element
         }
 
         if (description != null) {
             for (Map.Entry<String, String> i : description.entrySet()) {
-                writer.writeStartElement(FCS_RESOURCE_INFO_NS,
-                        "description");
-                writer.writeAttribute(XMLConstants.XML_NS_URI, "lang",
-                        i.getKey());
+                writer.writeStartElement(FCS_RESOURCE_INFO_NS, "description");
+                writer.writeAttribute(XMLConstants.XML_NS_URI, "lang", i.getKey());
                 writer.writeCharacters(i.getValue());
                 writer.writeEndElement(); // "description" element
             }
@@ -91,8 +86,7 @@ public class ResourceInfo {
         if (indexes != null) {
             writer.writeStartElement(FCS_RESOURCE_INFO_NS, "indexes");
             for (Map.Entry<String, String> i : indexes.entrySet()) {
-                writer.writeStartElement(FCS_RESOURCE_INFO_NS,
-                        "index");
+                writer.writeStartElement(FCS_RESOURCE_INFO_NS, "index");
                 writer.writeAttribute("category", i.getKey());
                 writer.writeCharacters(i.getValue());
                 writer.writeEndElement(); // "index" element
@@ -114,8 +108,7 @@ public class ResourceInfo {
                 String key = list.get(i);
                 String val = list.get(i + 1);
                 if ((key == null) || (val == null)) {
-                    throw new NullPointerException(
-                            "key == null || val == null");
+                    throw new NullPointerException("key == null || val == null");
                 }
                 result.put(list.get(i), list.get(i + 1));
             }

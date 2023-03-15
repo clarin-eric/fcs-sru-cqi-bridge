@@ -51,70 +51,62 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     private static final String PARAM_CQI_DEFAULT_CORPUS = "cqi.defaultCorpus";
     private static final String PARAM_CQI_DEFAULT_CORPUS_PID = "cqi.defaultCorpusPID";
     private static final String PARAM_CQI_DEFAULT_CORPUS_REF = "cqi.defaultCorpusRef";
-    private static final String RESOURCE_INFO_INVENTORY_URL =
-            "/WEB-INF/resource-info.xml";
+    private static final String RESOURCE_INFO_INVENTORY_URL = "/WEB-INF/resource-info.xml";
+
     private static final String CQI_SUPPORTED_RELATION_CQL_1_1 = "scr";
     private static final String CQI_SUPPORTED_RELATION_CQL_1_2 = "=";
     private static final String CQI_SUPPORTED_RELATION_EXACT = "exact";
     private static final String INDEX_CQL_SERVERCHOICE = "cql.serverChoice";
     private static final String INDEX_FCS_WORDS = "words";
-    private static final String CLARIN_FCS_RECORD_SCHEMA =
-            "http://clarin.eu/fcs/1.0";
+    private static final String CLARIN_FCS_RECORD_SCHEMA = "http://clarin.eu/fcs/1.0";
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\s+");
     private static final String WORD_POSITIONAL_ATTRIBUTE = "word";
     private static final String CONTEXT_STRUCTURAL_ATTRIBUTE = "s";
-    private static final Logger logger =
-            LoggerFactory.getLogger(CqiSRUSearchEngine.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(CqiSRUSearchEngine.class);
+
     private CqiClient client;
     private String defaultCorpusName;
     private String defaultCorpusPID;
     private String defaultCorpusRef;
 
     @Override
-    protected void doInit(ServletContext context, SRUServerConfig config,
-            Map<String, String> params) throws SRUConfigException {
-
+    protected void doInit(ServletContext context, SRUServerConfig config, Map<String, String> params)
+            throws SRUConfigException {
         /*
          * Perform search engine specific initialization in this method, e.g.
          * set up a database connection, etc.
          */
         final String serverHost = params.get(PARAM_CQI_SERVER_HOST);
         if (serverHost == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_SERVER_HOST + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_SERVER_HOST + "\" is mandatory");
         }
         logger.info("using cqi server host: {}", serverHost);
         final String serverPortString = params.get(PARAM_CQI_SERVER_PORT);
         if (serverPortString == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_SERVER_PORT + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_SERVER_PORT + "\" is mandatory");
         }
         final int serverPort = Integer.parseInt(serverPortString);
         logger.info("using cqi server port: {}", serverPort);
         final String username = params.get(PARAM_CQI_SERVER_USERNAME);
         if (username == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_SERVER_USERNAME + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_SERVER_USERNAME + "\" is mandatory");
         }
         final String password = params.get(PARAM_CQI_SERVER_PASSWORD);
         if (password == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_SERVER_PASSWORD + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_SERVER_PASSWORD + "\" is mandatory");
         }
         defaultCorpusName = params.get(PARAM_CQI_DEFAULT_CORPUS);
         if (defaultCorpusName == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_DEFAULT_CORPUS + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_DEFAULT_CORPUS + "\" is mandatory");
         }
         defaultCorpusPID = params.get(PARAM_CQI_DEFAULT_CORPUS_PID);
         if (defaultCorpusPID == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_DEFAULT_CORPUS_PID + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_DEFAULT_CORPUS_PID + "\" is mandatory");
         }
         defaultCorpusRef = params.get(PARAM_CQI_DEFAULT_CORPUS_REF);
         if (defaultCorpusRef == null) {
-            throw new SRUConfigException("parameter \""
-                    + PARAM_CQI_DEFAULT_CORPUS_REF + "\" is mandatory");
+            throw new SRUConfigException("parameter \"" + PARAM_CQI_DEFAULT_CORPUS_REF + "\" is mandatory");
         }
         try {
             client = new CqiClient(serverHost, serverPort);
@@ -129,8 +121,7 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     }
 
     @Override
-    protected ResourceInfoInventory createResourceInfoInventory(
-            ServletContext context, SRUServerConfig config,
+    protected ResourceInfoInventory createResourceInfoInventory(ServletContext context, SRUServerConfig config,
             Map<String, String> params) throws SRUConfigException {
         /*
          * Create a new instance of a class that implements the
@@ -139,32 +130,24 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
          * specification)
          */
         try {
-            return SimpleResourceInfoInventoryParser.parse(
-                    context.getResource(RESOURCE_INFO_INVENTORY_URL));
+            return SimpleResourceInfoInventoryParser.parse(context.getResource(RESOURCE_INFO_INVENTORY_URL));
         } catch (MalformedURLException e) {
-            throw new SRUConfigException(
-                    "error initializing resource info inventory", e);
+            throw new SRUConfigException("error initializing resource info inventory", e);
         }
 
     }
 
     @Override
-    public SRUSearchResultSet search(SRUServerConfig config,
-            SRURequest request, SRUDiagnosticList diagnostics)
+    public SRUSearchResultSet search(SRUServerConfig config, SRURequest request, SRUDiagnosticList diagnostics)
             throws SRUException {
         /*
          * sanity check: make sure we are asked to return stuff in CLARIN FCS
          * format if a recordSchema is specified.
          */
-        final String recordSchemaIdentifier =
-                request.getRecordSchemaIdentifier();
-        if ((recordSchemaIdentifier != null)
-                && !recordSchemaIdentifier.equals(CLARIN_FCS_RECORD_SCHEMA)) {
-            throw new SRUException(
-                    SRUConstants.SRU_UNKNOWN_SCHEMA_FOR_RETRIEVAL,
-                    recordSchemaIdentifier, "Record schema \""
-                    + recordSchemaIdentifier
-                    + "\" is not supported by this endpoint.");
+        final String recordSchemaIdentifier = request.getRecordSchemaIdentifier();
+        if ((recordSchemaIdentifier != null) && !recordSchemaIdentifier.equals(CLARIN_FCS_RECORD_SCHEMA)) {
+            throw new SRUException(SRUConstants.SRU_UNKNOWN_SCHEMA_FOR_RETRIEVAL, recordSchemaIdentifier,
+                    "Record schema \"" + recordSchemaIdentifier + "\" is not supported by this endpoint.");
         }
 
         /*
@@ -178,12 +161,13 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
         if (startRecord > 0) {
             startRecord--;
         }
-        logger.info("running query = \"{}\", offset = {}, limit = {}",
-                new Object[]{cqpQuery, startRecord, maximumRecords});
+        logger.info("running query = \"{}\", offset = {}, limit = {}, in = {}",
+                new Object[] { cqpQuery, startRecord, maximumRecords, defaultCorpusName });
         try {
             final CqiResult result = client.query(defaultCorpusName, cqpQuery, CONTEXT_STRUCTURAL_ATTRIBUTE);
             if ((result.size() > 0 && !result.absolute(startRecord)) || (result.size() == 0 && startRecord > 0)) {
-                diagnostics.addDiagnostic(SRUConstants.SRU_FIRST_RECORD_POSITION_OUT_OF_RANGE, Integer.toString(startRecord + 1), null);
+                diagnostics.addDiagnostic(SRUConstants.SRU_FIRST_RECORD_POSITION_OUT_OF_RANGE,
+                        Integer.toString(startRecord + 1), null);
             }
 
             return new SRUSearchResultSet(diagnostics) {
@@ -235,21 +219,19 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
                     try {
                         words = result.getValues(WORD_POSITIONAL_ATTRIBUTE, contextStart, contextEnd);
                     } catch (CqiClientException e) {
-                        throw new XMLStreamException("can't obtain the values of the positional attribute '" + WORD_POSITIONAL_ATTRIBUTE + "'", e);
+                        throw new XMLStreamException("can't obtain the values of the positional attribute '"
+                                + WORD_POSITIONAL_ATTRIBUTE + "'", e);
                     }
                     String leftContext = matchToString(words, 0, relMatchStart);
                     String keyWord = matchToString(words, relMatchStart, relMatchEnd);
                     String rightContext = matchToString(words, relMatchEnd, relContextEnd);
-                    XMLStreamWriterHelper.writeResourceWithKWICDataView(writer,
-                            defaultCorpusPID, defaultCorpusRef,
-                            leftContext, keyWord,
-                            rightContext);
+                    XMLStreamWriterHelper.writeResourceWithKWICDataView(writer, defaultCorpusPID, defaultCorpusRef,
+                            leftContext, keyWord, rightContext);
                 }
             };
         } catch (CqiClientException e) {
             logger.error("error processing query", e);
-            throw new SRUException(
-                    SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN,
+            throw new SRUException(SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN,
                     "Error processing query (" + e.getMessage() + ").", e);
         }
     }
@@ -273,44 +255,37 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
             final CQLTermNode root = (CQLTermNode) query;
 
             // only allow "cql.serverChoice" and "words" index
-            if (!(INDEX_CQL_SERVERCHOICE.equals(root.getIndex())
-                    || INDEX_FCS_WORDS.equals(root.getIndex()))) {
-                throw new SRUException(SRUConstants.SRU_UNSUPPORTED_INDEX,
-                        root.getIndex(), "Index \"" + root.getIndex()
-                        + "\" is not supported.");
+            if (!(INDEX_CQL_SERVERCHOICE.equals(root.getIndex()) || INDEX_FCS_WORDS.equals(root.getIndex()))) {
+                throw new SRUException(SRUConstants.SRU_UNSUPPORTED_INDEX, root.getIndex(),
+                        "Index \"" + root.getIndex() + "\" is not supported.");
             }
 
             // only allow "=" relation without any modifiers
             final CQLRelation relation = root.getRelation();
             final String baseRel = relation.getBase();
-            if (!(CQI_SUPPORTED_RELATION_CQL_1_1.equals(baseRel)
-                    || CQI_SUPPORTED_RELATION_CQL_1_2.equals(baseRel)
+            if (!(CQI_SUPPORTED_RELATION_CQL_1_1.equals(baseRel) || CQI_SUPPORTED_RELATION_CQL_1_2.equals(baseRel)
                     || CQI_SUPPORTED_RELATION_EXACT.equals(baseRel))) {
                 throw new SRUException(SRUConstants.SRU_UNSUPPORTED_RELATION,
                         relation.getBase(), "Relation \""
-                        + relation.getBase() + "\" is not supported.");
+                                + relation.getBase() + "\" is not supported.");
             }
             List<Modifier> modifiers = relation.getModifiers();
             if ((modifiers != null) && !modifiers.isEmpty()) {
                 Modifier modifier = modifiers.get(0);
-                throw new SRUException(
-                        SRUConstants.SRU_UNSUPPORTED_RELATION_MODIFIER,
-                        modifier.getValue(), "Relation modifier \""
-                        + modifier.getValue() + "\" is not supported.");
+                throw new SRUException(SRUConstants.SRU_UNSUPPORTED_RELATION_MODIFIER, modifier.getValue(),
+                        "Relation modifier \"" + modifier.getValue() + "\" is not supported.");
             }
 
             // check term
             final String term = root.getTerm();
             if ((term == null) || term.isEmpty()) {
-                throw new SRUException(SRUConstants.SRU_EMPTY_TERM_UNSUPPORTED,
-                        "An empty term is not supported.");
+                throw new SRUException(SRUConstants.SRU_EMPTY_TERM_UNSUPPORTED, "An empty term is not supported.");
             }
-            //convert to cqp by inserting quotes around each token
+            // convert to cqp by inserting quotes around each token
             return String.format("\"%s\"", SPACE_PATTERN.matcher(term).replaceAll("\" \""));
 
         }
         throw new SRUException(SRUConstants.SRU_QUERY_FEATURE_UNSUPPORTED,
-                "Server currently only supports term-only queries "
-                + "(CQL conformance level 0).");
+                "Server currently only supports term-only queries (CQL conformance level 0).");
     }
 }
