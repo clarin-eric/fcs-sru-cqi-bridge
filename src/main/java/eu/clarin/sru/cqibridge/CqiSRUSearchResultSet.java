@@ -22,6 +22,7 @@ import static eu.clarin.sru.cqibridge.CqiSRUSearchEngine.CLARIN_FCS_RECORD_SCHEM
 public class CqiSRUSearchResultSet extends SRUSearchResultSet {
 
     private SRURequest request;
+    private boolean supportLegacyKWIC;
     private CqiResult result;
     private String corpusPID;
     private String corpusRef;
@@ -33,9 +34,10 @@ public class CqiSRUSearchResultSet extends SRUSearchResultSet {
     private int maximumRecords = 1000;
 
     protected CqiSRUSearchResultSet(SRURequest request, SRUDiagnosticList diagnostics, final CqiResult result,
-            String corpusPID, String corpusRef) {
+            String corpusPID, String corpusRef, boolean supportLegacyKWIC) {
         super(diagnostics);
         this.request = request;
+        this.supportLegacyKWIC = supportLegacyKWIC;
         this.result = result;
         this.corpusPID = corpusPID;
         this.corpusRef = corpusRef;
@@ -131,9 +133,15 @@ public class CqiSRUSearchResultSet extends SRUSearchResultSet {
         String keyWord = matchToString(words, relMatchStart, relMatchEnd);
         String rightContext = matchToString(words, relMatchEnd, relContextEnd);
 
-        // HITS + KWIC dataviews (KWIC legacy support)
-        XMLStreamWriterHelper.writeResourceWithHitsDataViewLegacy(writer, corpusPID, corpusRef, leftContext, keyWord,
-                rightContext);
+        if (supportLegacyKWIC) {
+            // HITS + KWIC dataviews (KWIC legacy support)
+            XMLStreamWriterHelper.writeResourceWithHitsDataViewLegacy(writer, corpusPID, corpusRef, leftContext,
+                    keyWord, rightContext);
+        } else {
+            // FCS Hits only
+            XMLStreamWriterHelper.writeResourceWithHitsDataView(writer, corpusPID, corpusRef, leftContext, keyWord,
+                    rightContext);
+        }
     }
 
     private static String matchToString(String[] words, int fromIndex, int toIndex) {

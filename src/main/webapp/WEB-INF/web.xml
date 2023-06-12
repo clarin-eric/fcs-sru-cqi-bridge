@@ -40,6 +40,11 @@
             <param-name>cqi.defaultCorpusRef</param-name>
             <param-value>http://www.sfs.uni-tuebingen.de/ascl/ressourcen/corpora.html</param-value>
         </init-param>
+        <!-- FCS settings (legacy KWIC dataview support) -->
+        <init-param>
+            <param-name>eu.clarin.sru.cqibridge.supportLegacyKWIC</param-name>
+            <param-value>false</param-value>
+        </init-param>
         <!-- SRU settings -->
         <init-param>
             <param-name>eu.clarin.sru.server.numberOfRecords</param-name>

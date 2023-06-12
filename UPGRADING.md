@@ -64,3 +64,20 @@ Enabling FCS 2.0 by setting SRU version:
             <param-value>eu.clarin.sru.cqibridge.CqiSRUSearchEngine</param-value>
 ```
 
+FCS 2.0 switches from KWIC to Hits Data View for BASIC search. Legacy support of KWIC Data View is disabled.
+
+```diff
+@@ -40,6 +40,11 @@
+             <param-name>cqi.defaultCorpusRef</param-name>
+             <param-value>http://www.sfs.uni-tuebingen.de/ascl/ressourcen/corpora.html</param-value>
+         </init-param>
++        <!-- FCS settings (legacy KWIC dataview support) -->
++        <init-param>
++            <param-name>eu.clarin.sru.cqibridge.supportLegacyKWIC</param-name>
++            <param-value>false</param-value>
++        </init-param>
+         <!-- SRU settings -->
+         <init-param>
+             <param-name>eu.clarin.sru.server.numberOfRecords</param-name>
+```
+(NOTE: this diff builds on the previous `web.xml` diff above.)

@@ -28,6 +28,11 @@ In addition you'll have to modify [`web.xml`](src/main/webapp/WEB-INF/web.xml) t
 
 You may need to change the CQI [`CONTEXT_STRUCTURAL_ATTRIBUTE = "s"`](src/main/java/eu/clarin/sru/cqibridge/CqiSRUSearchEngine.java) if your corpus is structured differently.
 
+### Legacy Support
+
+By default, this endpoint will wrap results with the FCS _Hits_ Data View. If you need to support the legacy FCS _KWIC_ Data View (which is deprecated) but was the only Data View supported by the previous version of the endpoint implementation, you can re-enable it by setting the `eu.clarin.sru.cqibridge.supportLegacyKWIC` parameter in the [`web.xml`](src/main/webapp/WEB-INF/web.xml) to `true`. Both the Hits and KWIC Data Views will then be sent.
+_Note, however, that in some cases clients will aggregate results from both Data Views (to support legacy endpoints) so that results may appear twice._
+
 ## Building & Deployment
 
 To build the application run:

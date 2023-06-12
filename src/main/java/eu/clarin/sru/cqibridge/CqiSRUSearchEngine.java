@@ -56,6 +56,7 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     private static final String PARAM_CQI_DEFAULT_CORPUS = "cqi.defaultCorpus";
     private static final String PARAM_CQI_DEFAULT_CORPUS_PID = "cqi.defaultCorpusPID";
     private static final String PARAM_CQI_DEFAULT_CORPUS_REF = "cqi.defaultCorpusRef";
+    private static final String PARAM_SUPPORT_LEGACY_KWIC_DATAVIEW = "eu.clarin.sru.cqibridge.supportLegacyKWIC";
     public static final String PARAM_RESOURCE_INVENTORY_URL = "eu.clarin.sru.cqibridge.resourceInventoryURL";
     private static final String RESOURCE_INVENTORY_URL = "/WEB-INF/endpoint-description.xml";
 
@@ -78,6 +79,7 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
     private String defaultCorpusName;
     private String defaultCorpusPID;
     private String defaultCorpusRef;
+    private boolean supportLegacyKWIC;
 
     @Override
     protected EndpointDescription createEndpointDescription(ServletContext context, SRUServerConfig config,
@@ -138,6 +140,9 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
         if (defaultCorpusRef == null) {
             throw new SRUConfigException("parameter \"" + PARAM_CQI_DEFAULT_CORPUS_REF + "\" is mandatory");
         }
+
+        supportLegacyKWIC = parseBoolean(params.get(PARAM_SUPPORT_LEGACY_KWIC_DATAVIEW));
+        logger.info("legacy KWIC dataview support enabled");
 
         try {
             client = new CqiClient(serverHost, serverPort);
@@ -211,7 +216,8 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
                         Integer.toString(startRecord + 1), null);
             }
 
-            return new CqiSRUSearchResultSet(request, diagnostics, result, defaultCorpusPID, defaultCorpusRef);
+            return new CqiSRUSearchResultSet(request, diagnostics, result, defaultCorpusPID, defaultCorpusRef,
+                    supportLegacyKWIC);
         } catch (CqiClientException e) {
             logger.error("error processing query", e);
             throw new SRUException(SRUConstants.SRU_CANNOT_PROCESS_QUERY_REASON_UNKNOWN,
@@ -256,5 +262,24 @@ public class CqiSRUSearchEngine extends SimpleEndpointSearchEngineBase {
         }
         throw new SRUException(SRUConstants.SRU_QUERY_FEATURE_UNSUPPORTED,
                 "Server currently only supports term-only queries (CQL conformance level 0).");
+    }
+
+    /**
+     * Convince method for parsing a string to boolean. Values <code>1</code>,
+     * <code>true</code>, <code>yes</code> yield a <em>true</em> boolean value
+     * as a result, all others (including <code>null</code>) a <em>false</em>
+     * boolean value.
+     *
+     * @param value the string to parse
+     * @return <code>true</code> if the supplied string was considered something
+     *         representing a <em>true</em> boolean value, <code>false</code>
+     *         otherwise
+     * @see eu.clarin.sru.server.fcs.SimpleEndpointSearchEngineBase#parseBoolean(String)
+     */
+    protected static boolean parseBoolean(String value) {
+        if (value != null) {
+            return value.equals("1") || Boolean.parseBoolean(value);
+        }
+        return false;
     }
 }
